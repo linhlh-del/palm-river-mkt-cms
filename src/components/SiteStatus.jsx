@@ -50,10 +50,14 @@ export default function SiteStatus({ published, publishedAt }) {
     tone = 'amber';
     title = 'Website chưa có file cms-status.json';
     detail = `Website đang chạy bản build cũ (trước khi có báo trạng thái) hoặc chưa push code mới. Đường dẫn: ${PROJECT.statusUrl}`;
+  } else if (status && status.project !== PROJECT.id) {
+    tone = 'red';
+    title = 'Website đang dùng sai project CMS';
+    detail = `Website build ra project "${status.project}", nhưng CMS này cần "${PROJECT.id}". Kiểm tra CMS_PROJECT_ID hoặc cập nhật source/build mới trên VPS.`;
   } else if (status?.configured === false) {
     tone = 'red';
     title = 'Website build KHÔNG lấy được nội dung CMS';
-    detail = 'Project website trên Vercel thiếu CMS_SUPABASE_URL / CMS_SUPABASE_ANON_KEY (Settings → Environment Variables, tick Production). Thêm biến rồi bấm Đăng lại hoặc Redeploy.';
+    detail = 'Website báo configured=false: build không nhận được CMS_SUPABASE_URL / CMS_SUPABASE_ANON_KEY. Kiểm tra env production trên VPS rồi build lại.';
   } else if (status && match) {
     tone = 'green';
     title = 'Website đang chạy đúng bản đã đăng';
@@ -61,8 +65,8 @@ export default function SiteStatus({ published, publishedAt }) {
     tone = 'amber';
     title = 'Website đang chạy bản cũ';
     detail = publishedAt && new Date(publishedAt) > new Date(status.built_at)
-      ? 'Đang build lại sau lần đăng gần nhất (1–3 phút). Trang tự kiểm tra lại mỗi 20 giây. Quá 10 phút vẫn vậy → xem Build Logs trên Vercel (tìm dòng [cms]).'
-      : 'Bản build hiện tại không khớp bản đã đăng. Bấm Đăng lại hoặc Redeploy trên Vercel, rồi xem Build Logs (dòng [cms]).';
+      ? 'Đang build lại sau lần đăng gần nhất. Trang tự kiểm tra lại mỗi 20 giây. Nếu lâu vẫn chưa khớp, xem trạng thái và log build ở mục Đăng.'
+      : 'Bản build hiện tại không khớp bản đã đăng. Bấm Đăng lại, rồi xem trạng thái và log build ở mục Đăng.';
   }
 
   return (

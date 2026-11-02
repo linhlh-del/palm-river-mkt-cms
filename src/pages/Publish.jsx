@@ -5,7 +5,7 @@ import { PROJECT } from '@/project';
 import { Badge, Button, Card, Empty, Field, PageHeader, fmtDate, useToast } from '@/components/ui';
 import SiteStatus from '@/components/SiteStatus';
 
-const STATE = { READY: ['Đã lên website', 'green'], BUILDING: ['Đang build', 'amber'], QUEUED: ['Đang chờ build', 'amber'], INITIALIZING: ['Đang khởi tạo', 'amber'], ERROR: ['Build lỗi', 'red'], CANCELED: ['Đã huỷ', 'stone'] };
+const STATE = { IDLE: ['Chưa chạy build', 'stone'], READY: ['Đã lên website', 'green'], BUILDING: ['Đang build', 'amber'], QUEUED: ['Đang chờ build', 'amber'], INITIALIZING: ['Đang khởi tạo', 'amber'], ERROR: ['Build lỗi', 'red'], CANCELED: ['Đã huỷ', 'stone'] };
 
 /** Đăng bản nháp lên website (Supabase → Vercel Deploy Hook → build lại) + lịch sử phiên bản để khôi phục */
 export default function Publish() {
@@ -79,13 +79,15 @@ export default function Publish() {
 
         <div className="flex flex-col gap-6">
         <SiteStatus published={row?.published} publishedAt={row?.published_at} />
-        <Card title="Build trên Vercel" actions={<Button size="sm" variant="ghost" onClick={loadDeploy}>Làm mới</Button>}>
+        <Card title="Build website" actions={<Button size="sm" variant="ghost" onClick={loadDeploy}>Làm mới</Button>}>
           {!deploy ? <p className="text-sm text-stone-500">Đang kiểm tra…</p> : !deploy.configured ? (
-            <p className="text-sm text-stone-500">Chưa cấu hình VERCEL_TOKEN cho Edge Function nên không xem được trạng thái build. Website vẫn build lại bình thường qua Deploy Hook.</p>
+            <p className="text-sm text-stone-500">Chưa cấu hình Deploy Hook cho dự án này.</p>
           ) : (
             <div className="flex flex-col gap-2 text-sm">
               {st ? <Badge tone={st[1]}>{st[0]}</Badge> : <span>{deploy.state || deploy.error}</span>}
-              {deploy.created && <span className="text-xs text-stone-500">Bắt đầu: {fmtDate(deploy.created)}</span>}
+              {(deploy.started_at || deploy.created) && <span className="text-xs text-stone-500">Bắt đầu: {fmtDate(deploy.started_at || deploy.created)}</span>}
+              {deploy.error && <pre className="max-h-40 overflow-auto whitespace-pre-wrap rounded bg-red-50 p-2 text-xs text-red-700">{deploy.error}</pre>}
+              {deploy.log && <details className="text-xs text-stone-500"><summary className="cursor-pointer">Log build gần nhất</summary><pre className="mt-2 max-h-56 overflow-auto whitespace-pre-wrap rounded bg-stone-50 p-2">{deploy.log}</pre></details>}
               {deploy.url && <a href={deploy.url} target="_blank" rel="noopener noreferrer" className="text-xs text-[var(--accent)] hover:underline">Xem bản deploy ↗</a>}
             </div>
           )}
